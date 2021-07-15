@@ -310,7 +310,7 @@ func (r *azureManagedControlPlaneReconciler) reconcileDatabricksClusterControlle
 	deploymentName := "databricks-controller"
 	containerName := "databricks-controller"
 	appName := "databricks-controller"
-	image := "busybox"
+	image := "dbacrdevwestus.azurecr.io/databricks-cluster-controller:latest"
 
 	// Ensure namespace is created
 	_, err = clientset.CoreV1().Namespaces().Get(databricksControllerNamespace, metav1.GetOptions{})
