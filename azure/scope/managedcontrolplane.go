@@ -404,6 +404,10 @@ func (s *ManagedControlPlaneScope) ManagedClusterSpec() (azure.ManagedClusterSpe
 		}
 	}
 
+	if s.ControlPlane.Spec.EnableRBAC != nil {
+		managedClusterSpec.EnableRBAC = s.ControlPlane.Spec.EnableRBAC
+	}
+
 	return managedClusterSpec, nil
 }
 

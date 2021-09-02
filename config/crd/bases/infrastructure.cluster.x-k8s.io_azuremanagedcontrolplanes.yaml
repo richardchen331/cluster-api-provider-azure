@@ -86,6 +86,10 @@ spec:
                   DNS service. It must be within the Kubernetes service address range
                   specified in serviceCidr.
                 type: string
+              enableRBAC:
+                description: EnableRBAC - Whether to enable Kubernetes Role-Based
+                  Access Control.
+                type: boolean
               loadBalancerSKU:
                 description: LoadBalancerSKU is the SKU of the loadBalancer to be
                   provisioned.
@@ -246,6 +250,10 @@ spec:
                   DNS service. It must be within the Kubernetes service address range
                   specified in serviceCidr.
                 type: string
+              enableRBAC:
+                description: EnableRBAC - Whether to enable Kubernetes Role-Based
+                  Access Control.
+                type: boolean
               identityRef:
                 description: IdentityRef is a reference to a AzureClusterIdentity
                   to be used when reconciling this cluster

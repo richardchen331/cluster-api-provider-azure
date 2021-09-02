@@ -87,6 +87,10 @@ type AzureManagedControlPlaneSpec struct {
 	// AadProfile is Azure Active Directory configuration to integrate with AKS for aad authentication.
 	// +optional
 	AADProfile *AADProfile `json:"aadProfile,omitempty"`
+
+	// EnableRBAC - Whether to enable Kubernetes Role-Based Access Control.
+	// +optional
+	EnableRBAC *bool `json:"enableRBAC,omitempty"`
 }
 
 // AADProfile - AAD integration managed by AKS.

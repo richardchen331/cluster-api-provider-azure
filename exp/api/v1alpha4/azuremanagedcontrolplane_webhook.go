@@ -242,6 +242,16 @@ func (r *AzureManagedControlPlane) ValidateUpdate(oldRaw runtime.Object) error {
 		}
 	}
 
+	if (old.Spec.EnableRBAC == nil && r.Spec.EnableRBAC != nil) ||
+		(old.Spec.EnableRBAC != nil && r.Spec.EnableRBAC == nil) ||
+		(old.Spec.EnableRBAC != nil && r.Spec.EnableRBAC != nil && *old.Spec.EnableRBAC != *r.Spec.EnableRBAC) {
+		allErrs = append(allErrs,
+			field.Invalid(
+				field.NewPath("Spec", "EnableRBAC"),
+				r.Spec.EnableRBAC,
+				"field is immutable"))
+	}
+
 	if len(allErrs) == 0 {
 		return r.Validate()
 	}

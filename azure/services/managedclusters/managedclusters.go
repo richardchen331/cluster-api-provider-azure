@@ -173,6 +173,10 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		}
 	}
 
+	if managedClusterSpec.EnableRBAC != nil {
+		managedCluster.EnableRBAC = managedClusterSpec.EnableRBAC
+	}
+
 	if isCreate {
 		managedCluster, err = s.Client.CreateOrUpdate(ctx, managedClusterSpec.ResourceGroupName, managedClusterSpec.Name, managedCluster)
 		if err != nil {

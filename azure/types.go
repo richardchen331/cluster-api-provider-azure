@@ -358,6 +358,9 @@ type ManagedClusterSpec struct {
 
 	// AADProfile is Azure Active Directory configuration to integrate with AKS, for aad authentication.
 	AADProfile *AADProfile
+
+	// EnableRBAC - Whether to enable Kubernetes Role-Based Access Control.
+	EnableRBAC *bool
 }
 
 // AADProfile is Azure Active Directory configuration to integrate with AKS, for aad authentication.

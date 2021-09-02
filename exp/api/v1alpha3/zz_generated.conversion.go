@@ -739,6 +739,7 @@ func autoConvert_v1alpha3_AzureManagedControlPlaneSpec_To_v1alpha4_AzureManagedC
 	out.DNSServiceIP = (*string)(unsafe.Pointer(in.DNSServiceIP))
 	out.LoadBalancerSKU = (*string)(unsafe.Pointer(in.LoadBalancerSKU))
 	out.AADProfile = (*v1alpha4.AADProfile)(unsafe.Pointer(in.AADProfile))
+	out.EnableRBAC = (*bool)(unsafe.Pointer(in.EnableRBAC))
 	return nil
 }
 
@@ -767,6 +768,7 @@ func autoConvert_v1alpha4_AzureManagedControlPlaneSpec_To_v1alpha3_AzureManagedC
 	out.LoadBalancerSKU = (*string)(unsafe.Pointer(in.LoadBalancerSKU))
 	// WARNING: in.IdentityRef requires manual conversion: does not exist in peer-type
 	out.AADProfile = (*AADProfile)(unsafe.Pointer(in.AADProfile))
+	out.EnableRBAC = (*bool)(unsafe.Pointer(in.EnableRBAC))
 	return nil
 }
 
