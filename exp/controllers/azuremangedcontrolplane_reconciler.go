@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	appsv1 "k8s.io/api/apps/v1"
 	"net"
 	"strings"
 
@@ -27,6 +28,8 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/cluster-api/util/secret"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -127,6 +130,11 @@ func (r *azureManagedControlPlaneReconciler) Reconcile(ctx context.Context, scop
 	scope.V(2).Info("Reconciling kubeconfig")
 	if err := r.reconcileKubeconfig(ctx, scope, managedClusterSpec); err != nil {
 		return errors.Wrapf(err, "failed to reconcile kubeconfig secret")
+	}
+
+	scope.V(2).Info("Reconciling databricks cluster controller")
+	if err := r.reconcileDatabricksClusterController(ctx, scope, managedClusterSpec); err != nil {
+		return errors.Wrapf(err, "failed to reconcile databricks cluster controller")
 	}
 
 	return nil
@@ -283,6 +291,73 @@ func (r *azureManagedControlPlaneReconciler) reconcileKubeconfig(ctx context.Con
 	}); err != nil {
 		return errors.Wrapf(err, "failed to kubeconfig secret for cluster")
 	}
+	return nil
+}
+
+func (r *azureManagedControlPlaneReconciler) reconcileDatabricksClusterController(ctx context.Context, scope *scope.ManagedControlPlaneScope, managedClusterSpec *managedclusters.Spec) error {
+	ctx, span := tele.Tracer().Start(ctx, "controllers.azureManagedControlPlaneReconciler.reconcileDatabricksClusterController")
+	defer span.End()
+
+	// Construct client to the managed cluster
+	data, err := r.managedClustersSvc.GetCredentials(ctx, managedClusterSpec.ResourceGroupName, managedClusterSpec.Name)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get credentials for managed cluster")
+	}
+	config, err := clientcmd.RESTConfigFromKubeConfig(data)
+	clientset, err := kubernetes.NewForConfig(config)
+
+	databricksControllerNamespace := "databricks-controller"
+	deploymentName := "databricks-controller"
+	containerName := "databricks-controller"
+	appName := "databricks-controller"
+	image := "dbacrdevwestus.azurecr.io/databricks-cluster-controller:latest"
+
+	// Ensure namespace is created
+	_, err = clientset.CoreV1().Namespaces().Get(databricksControllerNamespace, metav1.GetOptions{})
+	if err != nil {
+		clientset.CoreV1().Namespaces().Create(&corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: databricksControllerNamespace}})
+	}
+
+	// Ensure databricks cluster controller
+	_, err = clientset.AppsV1().Deployments(databricksControllerNamespace).Get(deploymentName, metav1.GetOptions{})
+	if err != nil {
+		container := corev1.Container{
+			Name	: containerName,
+			Image	: image,
+		}
+		toleration := corev1.Toleration{
+			Key		:	"nodeInitializing",
+			Value	:	"True",
+			Effect	:	"NoSchedule",
+		}
+		deployment := appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name		: deploymentName,
+				Namespace	: databricksControllerNamespace,
+			},
+			Spec:		appsv1.DeploymentSpec{
+				Selector	: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": appName,
+					},
+				},
+				Template	: corev1.PodTemplateSpec{
+					ObjectMeta	: metav1.ObjectMeta{
+						Labels	: map[string]string{
+							"app": appName,
+						},
+					},
+					Spec		: corev1.PodSpec{
+						InitContainers	: []corev1.Container{},
+						Containers		: []corev1.Container{container},
+						Tolerations		: []corev1.Toleration{toleration},
+					},
+				},
+			},
+		}
+		_, err = clientset.AppsV1().Deployments(databricksControllerNamespace).Create(&deployment)
+	}
+
 	return nil
 }
 

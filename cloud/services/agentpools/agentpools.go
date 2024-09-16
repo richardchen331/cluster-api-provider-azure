@@ -50,6 +50,8 @@ func (s *Service) Reconcile(ctx context.Context, spec interface{}) error {
 		return errors.New("invalid agent pool specification")
 	}
 
+	nodeTaints := &[]string{"nodeInitializing=True:NoSchedule"}
+
 	profile := containerservice.AgentPool{
 		ManagedClusterAgentPoolProfileProperties: &containerservice.ManagedClusterAgentPoolProfileProperties{
 			VMSize:              containerservice.VMSizeTypes(agentPoolSpec.SKU),
@@ -59,6 +61,7 @@ func (s *Service) Reconcile(ctx context.Context, spec interface{}) error {
 			Type:                containerservice.VirtualMachineScaleSets,
 			OrchestratorVersion: agentPoolSpec.Version,
 			VnetSubnetID:        &agentPoolSpec.VnetSubnetID,
+			NodeTaints:			 nodeTaints,
 		},
 	}
 
